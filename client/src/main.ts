@@ -1,56 +1,60 @@
-interface Character {
-    id: number;
+interface Square {
     x: number;
     y: number;
-    size: number;
+    width: number;
+    height: number;
     color: string;
-  }
-
-let characters: Character[] = [];
-
-async function fetchCharacters(): Promise<void> {
-const response = await fetch('http://localhost:3001/api/characters');
-characters = await response.json();
 }
 
-function drawCharacters(ctx: CanvasRenderingContext2D): void {
-characters.forEach(character => {
-    ctx.fillStyle = character.color;
-    ctx.fillRect(character.x, character.y, character.size, character.size);
-});
+interface GameState {
+red: Square;
+blue: Square;
+collision: boolean;
 }
 
-function init(): void {
-const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
-const ctx = canvas.getContext('2d')!;
+// Canvas setup
+const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
+const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
-canvas.addEventListener('click', async (e: MouseEvent) => {
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+canvas.width = 800;
+canvas.height = 400;
 
-    if (characters.length > 0) {
-    await fetch(`http://localhost:3001/api/move`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: characters[0].id, target: { x: mouseX, y: mouseY } })
-    });
-    await fetchCharacters();
-    }
-});
+// Function to draw a square
+function drawSquare(square: Square): void {
+ctx.fillStyle = square.color;
+ctx.fillRect(square.x, square.y, square.width, square.height);
+}
 
+// Fetch game state from the server
+async function fetchGameState(): Promise<GameState> {
+const response = await fetch("http://localhost:3001/api/state");
+return response.json();
+}
+
+// Game loop
 async function gameLoop(): Promise<void> {
+try {
+    const gameState = await fetchGameState();
+
+    // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawCharacters(ctx);
+
+    // Draw squares
+    drawSquare(gameState.red);
+    drawSquare(gameState.blue);
+
+    // Check for collision
+    if (gameState.collision) {
+    console.log("Collision detected!");
+    return; // Stop the loop
+    }
+
+    // Continue the loop
     requestAnimationFrame(gameLoop);
+} catch (error) {
+    console.error("Failed to fetch game state:", error);
+}
 }
 
-fetchCharacters().then(() => gameLoop());
-}
-
-fetch('http://localhost:3001/api/python')
-  .then(response => response.json())
-  .then(data => console.log(data))
-  .catch(error => console.error('Error fetching Python server data:', error));
-
-init();
+// Start the game
+gameLoop();

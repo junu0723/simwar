@@ -7,18 +7,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Node.js 서버와 Python 서버 연결
+// core server test
 app.get('/api/python', async (req: Request, res: Response) => {
   try {
-    const response = await axios.get('http://engine:5001/api/game'); // Python 서버 호출
-    res.json(response.data); // Python 서버의 응답 데이터를 클라이언트로 전달
+    const response = await axios.get('http://core:5001/api/game'); // call core server
+    res.json(response.data); // send core server response to client
   } catch (error) {
     console.error('Error connecting to Python server:', error);
     res.status(500).json({ error: 'Failed to connect to Python server' });
   }
 });
 
-// 테스트용 캐릭터 데이터
+// test character
 interface Character {
   id: number;
   x: number;
@@ -48,7 +48,43 @@ app.post('/api/move', (req: Request, res: Response) => {
   res.json(character);
 });
 
-// 서버 시작
+//
+
+// Squares' initial state
+const gameState = {
+  red: { x: 750, y: 175, width: 10, height: 10, color: "red", speed: -1 },
+  blue: { x: 0, y: 175, width: 10, height: 10, color: "blue", speed: 1 },
+  collision: false
+};
+
+// Update game state logic
+function updateGameState(): void {
+  if (!gameState.collision) {
+    // Update red square
+    gameState.red.x += gameState.red.speed;
+
+    // Update blue square
+    gameState.blue.x += gameState.blue.speed;
+
+    // Check for collision
+    if (
+      gameState.red.x < gameState.blue.x + gameState.blue.width &&
+      gameState.red.x + gameState.red.width > gameState.blue.x &&
+      gameState.red.y < gameState.blue.y + gameState.blue.height &&
+      gameState.red.y + gameState.red.height > gameState.blue.y
+    ) {
+      gameState.collision = true;
+    }
+  }
+}
+
+// API to get the current state
+app.get("/api/state", (req: Request, res: Response) => {
+  updateGameState(); // Update the game state
+  res.json(gameState); // Send the current state to the client
+});
+
+
 app.listen(3001, () => {
   console.log('Node.js server running on port 3000');
 });
