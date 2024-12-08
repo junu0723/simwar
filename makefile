@@ -1,22 +1,25 @@
-# Variables
-VENV			= .venv
-VENV_PYTHON		= $(VENV)/bin/python
-VENV_ACTIVATE	= $(VENV)/bin/activate
-SYSTEM_PYTHON	= $(or $(shell which python3), $(shell which python))
-PYTHON			= $(or $(wildcard $(VENV_PYTHON)), $(SYSTEM_PYTHON))
+# Docker Compose Commands
+.PHONY: build up down restart logs
 
-# Build Venv
+build:
+	docker-compose build
 
-$(VENV_PYTHON):
-	rm -rf $(VENV)
-	$(SYSTEM_PYTHON) -m venv $(VENV)
-	. $(VENV_ACTIVATE);\
-	pip install --upgrade pip;
-	pip install -r requirements.txt;
+up:
+	docker-compose up -d
 
-venv: $(VENV_PYTHON)
-deps:
-	. $(VENV_ACTIVATE);\
-	pip install -r requirements.txt;
+down:
+	docker-compose down
 
-.PHONY: venv deps
+restart:
+	docker-compose down && docker-compose up -d
+
+logs:
+	docker-compose logs -f
+
+# Individual Service Commands
+.PHONY: build-python build-nodejs
+build-python:
+	docker-compose build python-server
+
+build-nodejs:
+	docker-compose build nodejs-server

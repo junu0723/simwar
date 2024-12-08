@@ -53,3 +53,11 @@ function render() {
 }
 
 render();
+
+fetch('/api/proxy')
+  .then(response => response.json())
+  .then(data => console.log(data));
+
+fetch('/api/node')
+  .then(response => response.json())
+  .then(data => console.log(data.message));

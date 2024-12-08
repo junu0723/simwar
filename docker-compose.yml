@@ -1,0 +1,29 @@
+version: '3.9'
+
+services:
+  python-server:
+    build:
+      context: .
+      dockerfile: dockerfile.python
+    container_name: python-server
+    ports:
+      - "5001:5000"
+    networks:
+      - app-network
+
+  nodejs-server:
+    build:
+      context: .
+      dockerfile: dockerfile.nodejs
+    container_name: nodejs-server
+    ports:
+      - "3001:3000"
+    depends_on:
+      - python-server
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
