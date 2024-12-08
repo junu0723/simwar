@@ -1,29 +1,37 @@
 version: '3.9'
 
 services:
-  python-server:
+  core:
     build:
-      context: .
-      dockerfile: dockerfile.python
-    container_name: python-server
+      context: ./core
+    container_name: core
     ports:
-      - "5001:5000"
+      - "5001:5001"
     networks:
       - app-network
 
-  nodejs-server:
+  api:
     build:
-      context: .
-      dockerfile: dockerfile.nodejs
-    container_name: nodejs-server
+      context: ./api
+    container_name: api
     ports:
-      - "3001:3000"
+      - "3001:3001"
     depends_on:
-      - python-server
+      - core
+    networks:
+      - app-network
+
+  client:
+    build:
+      context: ./client
+    container_name: client
+    ports:
+      - "8080:8080"
+    depends_on:
+      - api
     networks:
       - app-network
 
 networks:
   app-network:
     driver: bridge
-
