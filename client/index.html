@@ -4,9 +4,51 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SIMWAR</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background: #f0f0f0;
+    }
+    #gameCanvas {
+      display: none;
+      margin: 20px auto;
+      background: #ffffff;
+    }
+    .screen {
+      display: none;
+      margin-top: 100px;
+    }
+    .screen.active {
+      display: block;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="800" height="600" style="border:1px solid black;"></canvas>
-  <script src="dist/main.js"></script>
+  <!-- Start Screen -->
+  <div id="startScreen" class="screen active">
+    <h1>Red vs Blue</h1>
+    <button id="startButton">Start Game</button>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="gameScreen" class="screen">
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+  </div>
+
+  <!-- End Screen -->
+  <div id="endScreen" class="screen">
+    <h1>Game Over</h1>
+    <button id="restartButton">Restart</button>
+  </div>
+
+  <script src="./dist/main.js" defer></script>
 </body>
 </html>

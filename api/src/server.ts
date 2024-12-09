@@ -49,21 +49,22 @@ app.post('/api/move', (req: Request, res: Response) => {
 });
 
 //
+// Game state
+type GameState = "start" | "game" | "end";
+
+let currentState: GameState = "start";
 
 // Squares' initial state
 const gameState = {
-  red: { x: 750, y: 175, width: 10, height: 10, color: "red", speed: -1 },
-  blue: { x: 0, y: 175, width: 10, height: 10, color: "blue", speed: 1 },
-  collision: false
+  red: { x: 750, y: 175, width: 10, height: 10, color: "red", speed: -1, health: 10 },
+  blue: { x: 0, y: 175, width: 10, height: 10, color: "blue", speed: 1, health: 10 }
 };
 
 // Update game state logic
-function updateGameState(): void {
-  if (!gameState.collision) {
-    // Update red square
+function updateGameLogic(): void {
+  if (currentState === "game") {
+    // Update positions
     gameState.red.x += gameState.red.speed;
-
-    // Update blue square
     gameState.blue.x += gameState.blue.speed;
 
     // Check for collision
@@ -73,16 +74,43 @@ function updateGameState(): void {
       gameState.red.y < gameState.blue.y + gameState.blue.height &&
       gameState.red.y + gameState.red.height > gameState.blue.y
     ) {
-      gameState.collision = true;
+      // Reduce health of both squares
+      gameState.red.health -= 1;
+      gameState.blue.health -= 1;
+
+      console.log(`Collision! Red HP: ${gameState.red.health}, Blue HP: ${gameState.blue.health}`);
+
+      // End the game if either square is out of health
+      if (gameState.red.health <= 0 || gameState.blue.health <= 0) {
+        currentState = "end";
+        console.log("Game Over!");
+      }
     }
   }
 }
 
 // API to get the current state
 app.get("/api/state", (req: Request, res: Response) => {
-  updateGameState(); // Update the game state
-  res.json(gameState); // Send the current state to the client
+  if (currentState === "game") {
+    updateGameLogic();
+  }
+  res.json({ state: currentState, gameState });
 });
+
+// API to start the game
+app.post("/api/start", (req: Request, res: Response) => {
+  currentState = "game";
+  gameState.red = { x: 750, y: 175, width: 50, height: 50, color: "red", speed: -1, health: 10 };
+  gameState.blue = { x: 0, y: 175, width: 50, height: 50, color: "blue", speed: 1, health: 10 };
+  res.json({ message: "Game started!" });
+});
+
+// API to reset the game
+app.post("/api/reset", (req: Request, res: Response) => {
+  currentState = "start";
+  res.json({ message: "Game reset to start state." });
+});
+
 
 
 app.listen(3001, () => {
