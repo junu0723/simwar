@@ -57,16 +57,34 @@ let currentState: GameState = "start";
 // Squares' initial state
 const gameState = {
   red: { x: 750, y: 175, width: 10, height: 10, color: "red", speed: -1, health: 10 },
-  blue: { x: 0, y: 175, width: 10, height: 10, color: "blue", speed: 1, health: 10 }
+  blue: { x: 0, y: 175, width: 10, height: 10, color: "blue", speed: 1, health: 10 },
+  collisionFrame: 0,
 };
+
+// Function to handle collision reaction
+function handleCollision(): void {
+  gameState.collisionFrame += 1;
+
+  // Reduce health only on first collision frame
+  if (gameState.collisionFrame === 1) {
+    gameState.red.health -= 1;
+    gameState.blue.health -= 1;
+    console.log(`Collision! Red HP: ${gameState.red.health}, Blue HP: ${gameState.blue.health}`);
+  }
+
+  if (gameState.collisionFrame <= 3) {
+    // Push both squares back for 10 frames
+    gameState.red.x -= gameState.red.speed; // Move red backward
+    gameState.blue.x -= gameState.blue.speed; // Move blue backward
+  } else {
+    // Reset collision reaction
+    gameState.collisionFrame = 0;
+  }
+}
 
 // Update game state logic
 function updateGameLogic(): void {
   if (currentState === "game") {
-    // Update positions
-    gameState.red.x += gameState.red.speed;
-    gameState.blue.x += gameState.blue.speed;
-
     // Check for collision
     if (
       gameState.red.x < gameState.blue.x + gameState.blue.width &&
@@ -74,17 +92,18 @@ function updateGameLogic(): void {
       gameState.red.y < gameState.blue.y + gameState.blue.height &&
       gameState.red.y + gameState.red.height > gameState.blue.y
     ) {
-      // Reduce health of both squares
-      gameState.red.health -= 1;
-      gameState.blue.health -= 1;
-
-      console.log(`Collision! Red HP: ${gameState.red.health}, Blue HP: ${gameState.blue.health}`);
-
-      // End the game if either square is out of health
-      if (gameState.red.health <= 0 || gameState.blue.health <= 0) {
-        currentState = "end";
-        console.log("Game Over!");
-      }
+      // Handle collision reaction
+      handleCollision();
+    }
+    else {
+      // Update positions
+      gameState.red.x += gameState.red.speed;
+      gameState.blue.x += gameState.blue.speed;
+    }
+    // End game if health reaches zero
+    if (gameState.red.health <= 0 || gameState.blue.health <= 0) {
+      currentState = "end";
+      console.log("Game Over!");
     }
   }
 }
@@ -102,6 +121,7 @@ app.post("/api/start", (req: Request, res: Response) => {
   currentState = "game";
   gameState.red = { x: 750, y: 175, width: 50, height: 50, color: "red", speed: -1, health: 10 };
   gameState.blue = { x: 0, y: 175, width: 50, height: 50, color: "blue", speed: 1, health: 10 };
+  gameState.collisionFrame = 0;
   res.json({ message: "Game started!" });
 });
 
