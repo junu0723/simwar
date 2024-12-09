@@ -1,0 +1,46 @@
+name: Makefile Checks
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint-and-validate:
+    name: Run Makefile Check
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+
+      # Step 3: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '23'
+
+      # Step 4: Ensure Docker Compose is available
+      - name: Set up Docker Compose
+        run: |
+          docker compose version || sudo apt-get update && sudo apt-get install -y docker-compose
+
+      # Step 5: Install dependencies
+      - name: Install dependencies
+        run: |
+          make setup
+
+      # Step 6: Run checks
+      - name: Run make check
+        run: |
+          make check
