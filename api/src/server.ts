@@ -18,37 +18,6 @@ app.get('/api/python', async (req: Request, res: Response) => {
   }
 });
 
-// test character
-interface Character {
-  id: number;
-  x: number;
-  y: number;
-  size: number;
-  color: string;
-}
-
-let characters: Character[] = [
-  { id: 1, x: 100, y: 100, size: 20, color: 'red' },
-  { id: 2, x: 200, y: 150, size: 20, color: 'blue' }
-];
-
-app.get('/api/characters', (req: Request, res: Response) => {
-  res.json(characters);
-});
-
-app.post('/api/move', (req: Request, res: Response) => {
-  const { id, target } = req.body;
-  const character = characters.find(c => c.id === id);
-  if (!character) {
-    res.status(404).json({ error: 'Character not found' });
-    return;
-  }
-  character.x = target.x;
-  character.y = target.y;
-  res.json(character);
-});
-
-//
 // Game state
 type GameState = "start" | "game" | "end";
 

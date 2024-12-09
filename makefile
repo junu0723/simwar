@@ -1,13 +1,13 @@
 # Variables
-DOCKER_COMPOSE = docker-compose
-PYTHON_DIR = core
-NODEJS_DIR = api
-CLIENT_DIR = client
-VENV = $(PYTHON_DIR)/.venv
-VENV_PYTHON = $(VENV)/bin/python
+DOCKER_COMPOSE := docker-compose
+PYTHON_DIR := core
+NODEJS_DIR := api
+CLIENT_DIR := client
+VENV := $(PYTHON_DIR)/.venv
+VENV_PYTHON := $(VENV)/bin/python
 
 # Docker Compose commands
-.PHONY: build up down restart logs
+.PHONY: build up down restart logs docker-validate
 
 build:
 	$(DOCKER_COMPOSE) build
@@ -22,6 +22,10 @@ restart: down up
 
 logs:
 	$(DOCKER_COMPOSE) logs -f
+
+docker-validate:
+	@echo "Validating Docker Compose configuration..."
+	docker-compose config
 
 # Python server commands
 .PHONY: python-venv python-install python-lint python-run python-clean
@@ -48,7 +52,7 @@ python-clean:
 	rm -rf $(VENV)
 
 # Node.js server commands
-.PHONY: node-install node-build node-lint node-run node-clean
+.PHONY: node-install node-build node-lint node-type-check npm-audit node-run node-clean
 
 node-install:
 	@echo "Installing Node.js dependencies for server..."
@@ -59,8 +63,19 @@ node-build:
 	cd $(NODEJS_DIR) && npx tsc
 
 node-lint:
-	@echo "Linting Node.js server code..."
-	cd $(NODEJS_DIR) && npx eslint src
+	@echo "Linting Node.js code..."
+	cd $(NODEJS_DIR) && npx eslint "src"
+	cd $(CLIENT_DIR) && npx eslint "src"
+
+node-type-check:
+	@echo "Running TypeScript type checks..."
+	cd $(NODEJS_DIR) && npx tsc --noEmit
+	cd $(CLIENT_DIR) && npx tsc --noEmit
+
+npm-audit:
+	@echo "Checking for npm vulnerabilities..."
+	cd $(NODEJS_DIR) && npm audit --production
+	cd $(CLIENT_DIR) && npm audit --production
 
 node-run:
 	@echo "Running Node.js server locally..."
@@ -97,3 +112,6 @@ setup: python-install node-install client-install
 
 clean: python-clean node-clean client-clean
 	@echo "Cleaned up all environments."
+
+check: python-lint node-lint node-type-check npm-audit docker-validate
+	@echo "All checks passed successfully!"
